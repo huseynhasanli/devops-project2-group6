@@ -1,5 +1,5 @@
 resource "azurerm_virtual_network" "main" {
-  name                = "vnet-3tier"
+  name                = "vnet-${var.suffix}"
   resource_group_name = var.rg_name
   location            = var.location
   address_space       = ["10.0.0.0/16"]
@@ -31,7 +31,6 @@ resource "azurerm_subnet" "data" {
   resource_group_name  = var.rg_name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.3.0/24"]
-  # private_endpoint_network_policies = "Disabled" is the new param
   private_endpoint_network_policies = "Disabled"
 }
 
@@ -42,7 +41,6 @@ resource "azurerm_subnet" "ops" {
   address_prefixes     = ["10.0.4.0/24"]
 }
 
-# NSG — Frontend: allow only from App Gateway subnet
 resource "azurerm_network_security_group" "frontend" {
   name                = "nsg-frontend"
   resource_group_name = var.rg_name
@@ -72,7 +70,6 @@ resource "azurerm_network_security_group" "frontend" {
   }
 }
 
-# NSG — Backend: allow only from frontend subnet on port 8080
 resource "azurerm_network_security_group" "backend" {
   name                = "nsg-backend"
   resource_group_name = var.rg_name
