@@ -21,3 +21,7 @@ output "backend_private_ip" {
 output "ops_private_ip" {
   value = azurerm_network_interface.ops.private_ip_address
 }
+
+output "ops_public_ip" {
+  value = azurerm_public_ip.ops.ip_address
+}

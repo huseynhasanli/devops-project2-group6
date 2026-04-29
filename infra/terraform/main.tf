@@ -30,3 +30,21 @@ module "sql" {
   vnet_id            = module.networking.vnet_id
   sql_admin_password = var.sql_admin_password
 }
+
+resource "azurerm_container_registry" "main" {
+  name                = "acrproject2g6"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = var.location
+  sku                 = "Basic"
+  admin_enabled       = true
+}
+
+module "appgateway" {
+  source              = "./modules/appgateway"
+  rg_name             = azurerm_resource_group.main.name
+  location            = var.location
+  suffix              = local.suffix
+  gateway_subnet_id   = module.networking.gateway_subnet_id
+  frontend_private_ip = module.vm.frontend_private_ip
+  backend_private_ip  = module.vm.backend_private_ip
+}
