@@ -1,0 +1,37 @@
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
+    state: present
+
+- name: Install Docker Engine
+  ansible.builtin.apt:
+    name: [docker-ce, docker-ce-cli, containerd.io, docker-compose-plugin]
+    state: present
+    update_cache: yes
+
+- name: Add azureuser to docker group
+  ansible.builtin.user:
+    name: azureuser
+    groups: docker
+    append: yes
+
+- name: Ensure Docker is started and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Log in to ACR using managed identity token
+  ansible.builtin.shell: |
+    TOKEN=$(curl -s -H "Metadata: true" \
+      "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/" \
+      | jq -r .access_token)
+    docker login {{ acr_login_server }} \
+      --username 00000000-0000-0000-0000-000000000000 \
+      --password "$TOKEN"
+  changed_when: false
