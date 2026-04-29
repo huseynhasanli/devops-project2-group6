@@ -15,3 +15,7 @@ locals {
 }
 
 variable "admin_ssh_public_key" {}
+
+variable "sql_admin_password" {
+  sensitive = true
+}
