@@ -13,3 +13,5 @@ variable "location" {
 locals {
   suffix = "${var.project}-${var.group}"
 }
+
+variable "admin_ssh_public_key" {}
