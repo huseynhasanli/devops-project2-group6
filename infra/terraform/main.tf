@@ -1,13 +1,16 @@
+data "azurerm_client_config" "current" {}
+
 resource "azurerm_resource_group" "main" {
   name     = "rg-${local.suffix}"
   location = var.location
 }
 
 module "networking" {
-  source   = "./modules/networking"
-  rg_name  = azurerm_resource_group.main.name
-  location = var.location
-  suffix   = local.suffix
+  source            = "./modules/networking"
+  rg_name           = azurerm_resource_group.main.name
+  location          = var.location
+  suffix            = local.suffix
+  admin_source_cidr = var.admin_source_cidr
 }
 
 module "vm" {
@@ -31,12 +34,56 @@ module "sql" {
   sql_admin_password = var.sql_admin_password
 }
 
+module "monitoring" {
+  source   = "./modules/monitoring"
+  rg_name  = azurerm_resource_group.main.name
+  location = var.location
+  suffix   = local.suffix
+}
+
+module "keyvault" {
+  source                          = "./modules/keyvault"
+  rg_name                         = azurerm_resource_group.main.name
+  location                        = var.location
+  suffix                          = local.suffix
+  tenant_id                       = data.azurerm_client_config.current.tenant_id
+  deployer_object_id              = data.azurerm_client_config.current.object_id
+  secret_reader_principal_ids     = [module.vm.backend_principal_id, module.vm.ops_principal_id]
+  sql_admin_password              = var.sql_admin_password
+  sonar_db_password               = var.sonar_db_password
+  app_insights_connection_string  = module.monitoring.app_insights_connection_string
+}
+
 resource "azurerm_container_registry" "main" {
   name                = "acrproject2g6"
   resource_group_name = azurerm_resource_group.main.name
   location            = var.location
   sku                 = "Basic"
-  admin_enabled       = true
+  admin_enabled       = false
+}
+
+resource "azurerm_role_assignment" "frontend_acr_pull" {
+  scope                            = azurerm_container_registry.main.id
+  role_definition_name             = "AcrPull"
+  principal_id                     = module.vm.frontend_principal_id
+  principal_type                   = "ServicePrincipal"
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "backend_acr_pull" {
+  scope                            = azurerm_container_registry.main.id
+  role_definition_name             = "AcrPull"
+  principal_id                     = module.vm.backend_principal_id
+  principal_type                   = "ServicePrincipal"
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "ops_acr_push" {
+  scope                            = azurerm_container_registry.main.id
+  role_definition_name             = "AcrPush"
+  principal_id                     = module.vm.ops_principal_id
+  principal_type                   = "ServicePrincipal"
+  skip_service_principal_aad_check = true
 }
 
 module "appgateway" {

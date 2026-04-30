@@ -65,8 +65,8 @@ frontend/
 npm install
 ```
 
-2. Create environment variables:
-Create a `.env` file in the root directory (copy from `.env.example`):
+2. Create environment variables for local development:
+Create a `.env.local` file in the `frontend/` directory:
 ```
 VITE_API_BASE_URL=http://localhost:8080
 ```
@@ -77,6 +77,8 @@ npm run dev
 ```
 
 The app will be available at `http://localhost:5173`
+
+Leave `VITE_API_BASE_URL` unset in production when the SPA is served behind the same App Gateway host as the backend API.
 
 ### Available Scripts
 

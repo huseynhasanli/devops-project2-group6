@@ -10,6 +10,18 @@ output "ops_vm_id" {
   value = azurerm_linux_virtual_machine.ops.id
 }
 
+output "frontend_principal_id" {
+  value = azurerm_linux_virtual_machine.frontend.identity[0].principal_id
+}
+
+output "backend_principal_id" {
+  value = azurerm_linux_virtual_machine.backend.identity[0].principal_id
+}
+
+output "ops_principal_id" {
+  value = azurerm_linux_virtual_machine.ops.identity[0].principal_id
+}
+
 output "frontend_private_ip" {
   value = azurerm_network_interface.frontend.private_ip_address
 }

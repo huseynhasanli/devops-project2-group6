@@ -2,39 +2,62 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
 import type { Ingredient, CartItem, Order, IngredientsResponse } from '../types';
 
-// Mock axios
 vi.mock('axios');
 
 const mockedAxios = vi.mocked(axios, true);
 
-// Create a mock axios instance
 const mockAxiosInstance = {
   get: vi.fn(),
   post: vi.fn(),
   delete: vi.fn(),
 };
 
-// Setup axios.create to return our mock instance
-mockedAxios.create.mockReturnValue(mockAxiosInstance as any);
-
-// Import after mocking
-const {
-  getIngredients,
-  getIngredientsByCategory,
-  addToCart,
-  getCart,
-  removeCartItem,
-  createOrder,
-  getOrder,
-} = await import('./api');
+const loadApiModule = async () => {
+  mockedAxios.create.mockReturnValue(mockAxiosInstance as any);
+  return import('./api');
+};
 
 describe('API Service', () => {
   beforeEach(() => {
+    vi.resetModules();
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
+    mockAxiosInstance.get.mockReset();
+    mockAxiosInstance.post.mockReset();
+    mockAxiosInstance.delete.mockReset();
+    mockedAxios.create.mockReturnValue(mockAxiosInstance as any);
+  });
+
+  it('should use same-origin API calls when VITE_API_BASE_URL is blank', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', '');
+
+    await loadApiModule();
+
+    expect(mockedAxios.create).toHaveBeenCalledWith({
+      baseURL: '',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  });
+
+  it('should use the configured VITE_API_BASE_URL for local development', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:8080');
+
+    await loadApiModule();
+
+    expect(mockedAxios.create).toHaveBeenCalledWith({
+      baseURL: 'http://localhost:8080',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   });
 
   describe('getIngredients', () => {
     it('should fetch all ingredients', async () => {
+      const { getIngredients } = await loadApiModule();
+
       const mockResponse: IngredientsResponse = {
         buns: [],
         patties: [],
@@ -52,6 +75,8 @@ describe('API Service', () => {
 
   describe('getIngredientsByCategory', () => {
     it('should fetch ingredients by category', async () => {
+      const { getIngredientsByCategory } = await loadApiModule();
+
       const mockIngredients: Ingredient[] = [
         {
           id: 1,
@@ -72,6 +97,8 @@ describe('API Service', () => {
 
   describe('addToCart', () => {
     it('should add item to cart', async () => {
+      const { addToCart } = await loadApiModule();
+
       const mockItem = {
         sessionId: 'session_123',
         ingredientId: 1,
@@ -95,6 +122,8 @@ describe('API Service', () => {
 
   describe('getCart', () => {
     it('should fetch cart items by session id', async () => {
+      const { getCart } = await loadApiModule();
+
       const sessionId = 'test_session_123';
       const mockCart: CartItem[] = [
         {
@@ -115,6 +144,8 @@ describe('API Service', () => {
 
   describe('removeCartItem', () => {
     it('should remove item from cart', async () => {
+      const { removeCartItem } = await loadApiModule();
+
       const itemId = 1;
 
       mockAxiosInstance.delete.mockResolvedValue({});
@@ -126,6 +157,8 @@ describe('API Service', () => {
 
   describe('createOrder', () => {
     it('should create a new order', async () => {
+      const { createOrder } = await loadApiModule();
+
       const orderData = {
         sessionId: 'session_123',
         customerName: 'John Doe',
@@ -155,6 +188,8 @@ describe('API Service', () => {
 
   describe('getOrder', () => {
     it('should fetch order by id', async () => {
+      const { getOrder } = await loadApiModule();
+
       const orderId = 'order_123';
       const mockOrder: Order = {
         id: 1,
@@ -174,5 +209,19 @@ describe('API Service', () => {
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(`/api/orders/${orderId}`);
     });
   });
-});
 
+  describe('getOrderHistory', () => {
+    it('should fetch order history with optional email filter', async () => {
+      const { getOrderHistory } = await loadApiModule();
+      const mockOrders: Order[] = [];
+
+      mockAxiosInstance.get.mockResolvedValue({ data: mockOrders });
+
+      const result = await getOrderHistory('john@example.com');
+      expect(result).toEqual(mockOrders);
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/api/orders/history', {
+        params: { email: 'john@example.com' },
+      });
+    });
+  });
+});

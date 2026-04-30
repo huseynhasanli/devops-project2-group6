@@ -27,10 +27,10 @@ resource "azurerm_subnet" "backend" {
 }
 
 resource "azurerm_subnet" "data" {
-  name                 = "snet-data-${var.suffix}"
-  resource_group_name  = var.rg_name
-  virtual_network_name = azurerm_virtual_network.main.name
-  address_prefixes     = ["10.0.3.0/24"]
+  name                              = "snet-data-${var.suffix}"
+  resource_group_name               = var.rg_name
+  virtual_network_name              = azurerm_virtual_network.main.name
+  address_prefixes                  = ["10.0.3.0/24"]
   private_endpoint_network_policies = "Disabled"
 }
 
@@ -77,14 +77,14 @@ resource "azurerm_network_security_group" "backend" {
   location            = var.location
 
   security_rule {
-    name                       = "allow-frontend"
+    name                       = "allow-appgw"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "8080"
-    source_address_prefix      = "10.0.1.0/24"
+    source_address_prefix      = "10.0.0.0/27"
     destination_address_prefix = "*"
   }
 
@@ -144,7 +144,7 @@ resource "azurerm_network_security_group" "ops" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
+    source_address_prefix      = var.admin_source_cidr
     destination_address_prefix = "*"
   }
 }

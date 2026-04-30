@@ -66,11 +66,11 @@ resource "azurerm_application_gateway" "main" {
   }
 
   request_routing_rule {
-    name                       = "rule-frontend"
-    rule_type                  = "PathBasedRouting"
-    http_listener_name         = "listener-http"
-    url_path_map_name          = "url-path-map"
-    priority                   = 100
+    name               = "rule-frontend"
+    rule_type          = "PathBasedRouting"
+    http_listener_name = "listener-http"
+    url_path_map_name  = "url-path-map"
+    priority           = 100
   }
 
   url_path_map {
@@ -93,7 +93,7 @@ resource "azurerm_application_gateway" "main" {
   }
 
   ssl_policy {
-  policy_type = "Predefined"
-  policy_name = "AppGwSslPolicy20220101"
-}
+    policy_type = "Predefined"
+    policy_name = "AppGwSslPolicy20220101"
+  }
 }

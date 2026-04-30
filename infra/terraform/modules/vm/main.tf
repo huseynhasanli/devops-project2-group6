@@ -13,7 +13,8 @@ resource "azurerm_network_interface" "frontend" {
   ip_configuration {
     name                          = "internal"
     subnet_id                     = var.frontend_subnet_id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = var.frontend_private_ip_address
   }
 }
 
@@ -25,7 +26,8 @@ resource "azurerm_network_interface" "backend" {
   ip_configuration {
     name                          = "internal"
     subnet_id                     = var.backend_subnet_id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = var.backend_private_ip_address
   }
 }
 
@@ -37,7 +39,8 @@ resource "azurerm_network_interface" "ops" {
   ip_configuration {
     name                          = "internal"
     subnet_id                     = var.ops_subnet_id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = var.ops_private_ip_address
     public_ip_address_id          = azurerm_public_ip.ops.id
   }
 }
@@ -54,6 +57,10 @@ resource "azurerm_linux_virtual_machine" "frontend" {
   admin_ssh_key {
     username   = var.admin_username
     public_key = var.admin_ssh_public_key
+  }
+
+  identity {
+    type = "SystemAssigned"
   }
 
   os_disk {
@@ -83,6 +90,10 @@ resource "azurerm_linux_virtual_machine" "backend" {
     public_key = var.admin_ssh_public_key
   }
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
@@ -108,6 +119,10 @@ resource "azurerm_linux_virtual_machine" "ops" {
   admin_ssh_key {
     username   = var.admin_username
     public_key = var.admin_ssh_public_key
+  }
+
+  identity {
+    type = "SystemAssigned"
   }
 
   os_disk {

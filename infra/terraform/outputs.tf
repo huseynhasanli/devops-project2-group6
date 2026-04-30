@@ -6,17 +6,52 @@ output "resource_group_location" {
   value = azurerm_resource_group.main.location
 }
 
+output "admin_source_cidr" {
+  value = var.admin_source_cidr
+}
+
 output "acr_login_server" {
   value = azurerm_container_registry.main.login_server
 }
 
-output "acr_admin_username" {
-  value = azurerm_container_registry.main.admin_username
+output "acr_name" {
+  value = azurerm_container_registry.main.name
 }
 
-output "acr_admin_password" {
-  value     = azurerm_container_registry.main.admin_password
-  sensitive = true
+output "frontend_private_ip" {
+  value = module.vm.frontend_private_ip
+}
+
+output "backend_private_ip" {
+  value = module.vm.backend_private_ip
+}
+
+output "ops_public_ip" {
+  value = module.vm.ops_public_ip
+}
+
+output "sql_server_fqdn" {
+  value = module.sql.sql_server_fqdn
+}
+
+output "sql_database_name" {
+  value = module.sql.sql_database_name
+}
+
+output "sql_admin_login" {
+  value = module.sql.sql_admin_login
+}
+
+output "key_vault_name" {
+  value = module.keyvault.key_vault_name
+}
+
+output "gateway_subnet_cidr" {
+  value = module.networking.gateway_subnet_cidr
+}
+
+output "ops_subnet_cidr" {
+  value = module.networking.ops_subnet_cidr
 }
 
 output "appgw_public_ip" {

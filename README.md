@@ -35,6 +35,16 @@ capstone_project_ih/
 │   │   └── data.sql                        # Initial data
 │   ├── pom.xml              # Maven dependencies and build config
 │   └── TESTING.md           # Backend testing documentation
+├── infra/terraform/         # Azure infrastructure as code
+│   ├── modules/             # Reusable networking, VM, SQL, Key Vault, monitoring modules
+│   ├── main.tf              # Root infrastructure composition
+│   ├── variables.tf         # Root input variables
+│   └── outputs.tf           # Values consumed by deployment automation
+├── config/ansible/          # Host configuration and application deployment
+│   ├── roles/               # Common, Docker, frontend, backend, SonarQube roles
+│   ├── requirements.yml     # Required Ansible collections
+│   ├── site.yml             # Playbook that builds inventory from Terraform outputs
+│   └── README.md            # Ansible-specific deployment notes
 ├── environment.env.example  # Environment variables template
 └── environment.env          # Environment variables (create from example)
 ```
@@ -69,16 +79,16 @@ The frontend connects to the backend API through the following configuration:
 **Location**: `frontend/src/services/api.ts`
 
 ```typescript
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || '';
 ```
 
-**Required Environment Variable**:
-- `VITE_API_BASE_URL`: The base URL for the backend API (defaults to `http://localhost:8080`)
+**Optional Environment Variable**:
+- `VITE_API_BASE_URL`: The backend base URL for local development. Leave it unset in production so the SPA uses the same App Gateway origin.
 
 **Usage**:
-1. Create a `.env` file in the frontend directory
+1. Create a `.env.local` file in the frontend directory for local development
 2. Add: `VITE_API_BASE_URL=http://your-backend-url:8080`
-3. For production: `VITE_API_BASE_URL=https://your-production-api.com`
+3. For production behind App Gateway: leave `VITE_API_BASE_URL` unset
 
 ### Frontend Compilation and Deployment
 
@@ -113,7 +123,7 @@ The build process:
 - Build the application: `npm run build`
 - Deploy the `dist/` folder to any static hosting service:
   - Vercel, Netlify, AWS S3, Azure Static Web Apps
-  - Set `VITE_API_BASE_URL` environment variable in hosting platform
+  - Set `VITE_API_BASE_URL` only if the frontend should call a different backend origin
 
 **Option 2: Docker with Nginx**
 - The project includes `nginx.conf` for containerized deployment
