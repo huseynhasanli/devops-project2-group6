@@ -102,11 +102,12 @@ Add `.github/workflows/frontend.yml`.
 
 Requirements:
 
-- Build, lint, test, and build the Docker image on the self-hosted ops runner
+- Run build, lint, and test on `ubuntu-latest` for both pushes and pull requests
+- Run image push and deployment on the self-hosted ops runner only for pushes to `main`
 - Read ACR details from Terraform outputs instead of hardcoding them
 - Use managed-identity Azure login on `main`
 - Build and push `frontend:${GITHUB_SHA}` and `frontend:latest`
-- Deploy with `ansible-playbook config/ansible/site.yml --limit frontend_vms`
+- Deploy with `ansible-playbook config/ansible/site.yml --limit "localhost,frontend_vms"`
 - Do not use static Ansible inventory files
 - Let Ansible build inventory from `terraform output -json`
 
@@ -129,7 +130,9 @@ on:
 
 Deployment notes:
 
-- Frontend build, image push, and Ansible deploy run on the same self-hosted runner
+- Frontend image push and Ansible deploy run on the self-hosted runner only on `main`
+- Pull request checks do not need the self-hosted runner
 - SonarQube can run on `main` from that same runner
 - The deploy path reuses the existing `frontend_deploy` Ansible role
+- Set `ANSIBLE_USE_BASTION=false` when the deploy command runs on the ops runner inside the VNet
 - Terraform remains the source of truth for ACR naming and host targeting

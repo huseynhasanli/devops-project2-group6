@@ -30,6 +30,22 @@ output "ops_public_ip" {
   value = module.vm.ops_public_ip
 }
 
+output "ops_private_ip" {
+  value = module.vm.ops_private_ip
+}
+
+output "appgw_hostname" {
+  value = module.appgateway.appgw_frontend_hostname
+}
+
+output "appgw_frontend_origin" {
+  value = "${var.appgw_enable_https ? "https" : "http"}://${module.appgateway.appgw_frontend_hostname != "" ? module.appgateway.appgw_frontend_hostname : module.appgateway.appgw_public_ip}"
+}
+
+output "appgw_ssl_certificate_name" {
+  value = var.appgw_ssl_certificate_name
+}
+
 output "sql_server_fqdn" {
   value = module.sql.sql_server_fqdn
 }

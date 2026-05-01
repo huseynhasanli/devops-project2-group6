@@ -147,6 +147,18 @@ resource "azurerm_network_security_group" "ops" {
     source_address_prefix      = var.admin_source_cidr
     destination_address_prefix = "*"
   }
+
+  security_rule {
+    name                       = "allow-acme-challenge-from-appgw"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8089"
+    source_address_prefix      = "10.0.0.0/27"
+    destination_address_prefix = "*"
+  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "frontend" {

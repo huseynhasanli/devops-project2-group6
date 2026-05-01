@@ -6,6 +6,10 @@ variable "deployer_object_id" {}
 variable "secret_reader_principal_ids" {
   type = list(string)
 }
+variable "certificate_manager_principal_ids" {
+  type    = list(string)
+  default = []
+}
 variable "sql_admin_password" {
   sensitive = true
 }

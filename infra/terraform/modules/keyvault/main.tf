@@ -41,6 +41,30 @@ resource "azurerm_key_vault_access_policy" "secret_readers" {
   ]
 }
 
+resource "azurerm_key_vault_access_policy" "certificate_managers" {
+  for_each = toset(var.certificate_manager_principal_ids)
+
+  key_vault_id = azurerm_key_vault.main.id
+  tenant_id    = var.tenant_id
+  object_id    = each.value
+
+  secret_permissions = [
+    "Delete",
+    "Get",
+    "List",
+    "Set",
+  ]
+
+  certificate_permissions = [
+    "Create",
+    "Delete",
+    "Get",
+    "Import",
+    "List",
+    "Update",
+  ]
+}
+
 resource "azurerm_key_vault_secret" "sql_admin_password" {
   name         = "sql-admin-password"
   value        = var.sql_admin_password

@@ -6,6 +6,7 @@
     terraform_dir: "{{ playbook_dir }}/../../infra/terraform"
     ansible_login_user: "{{ lookup('env', 'ANSIBLE_USER') | default('azureuser', true) }}"
     ansible_login_key_file: "{{ lookup('env', 'ANSIBLE_SSH_PRIVATE_KEY_FILE') | default('~/.ssh/vm_key', true) }}"
+    ansible_use_bastion: "{{ lookup('env', 'ANSIBLE_USE_BASTION') | default('true', true) | bool }}"
     image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
   tasks:
     - name: Read Terraform outputs
@@ -29,18 +30,19 @@
         ansible_host: "{{ item.ansible_host }}"
         ansible_user: "{{ ansible_login_user }}"
         ansible_ssh_private_key_file: "{{ ansible_login_key_file }}"
-        ansible_ssh_common_args: "{{ '-o ProxyJump=' ~ ansible_login_user ~ '@' ~ terraform_outputs.ops_public_ip.value if item.use_bastion else omit }}"
+        ansible_ssh_common_args: "{{ '-o ProxyJump=' ~ ansible_login_user ~ '@' ~ terraform_outputs.ops_public_ip.value if (item.use_bastion and ansible_use_bastion) else omit }}"
         acr_name: "{{ terraform_outputs.acr_name.value }}"
         acr_login_server: "{{ terraform_outputs.acr_login_server.value }}"
         frontend_port: "80"
         backend_port: "8080"
         sonar_port: "9000"
+        acme_challenge_port: "8089"
         frontend_image: "{{ terraform_outputs.acr_login_server.value }}/frontend:{{ image_tag }}"
         backend_image: "{{ terraform_outputs.acr_login_server.value }}/backend:{{ image_tag }}"
         sql_host: "{{ terraform_outputs.sql_server_fqdn.value }}"
         sql_database: "{{ terraform_outputs.sql_database_name.value }}"
         sql_username: "{{ terraform_outputs.sql_admin_login.value }}"
-        cors_allowed_origins: "{{ lookup('env', 'BACKEND_CORS_ALLOWED_ORIGINS') | default('http://' ~ terraform_outputs.appgw_public_ip.value, true) }}"
+        cors_allowed_origins: "{{ lookup('env', 'BACKEND_CORS_ALLOWED_ORIGINS') | default(terraform_outputs.appgw_frontend_origin.value, true) }}"
         key_vault_name: "{{ terraform_outputs.key_vault_name.value }}"
         key_vault_sql_password_secret_name: "sql-admin-password"
         key_vault_sonar_db_password_secret_name: "sonar-db-password"
@@ -59,7 +61,7 @@
           use_bastion: true
         - name: ops
           group: sonar_vms
-          ansible_host: "{{ terraform_outputs.ops_public_ip.value }}"
+          ansible_host: "{{ terraform_outputs.ops_private_ip.value if not ansible_use_bastion else terraform_outputs.ops_public_ip.value }}"
           use_bastion: false
 
 - name: Configure and deploy frontend hosts

@@ -41,17 +41,24 @@ module "monitoring" {
   suffix   = local.suffix
 }
 
+resource "azurerm_user_assigned_identity" "appgateway" {
+  name                = "id-appgw-${local.suffix}"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = var.location
+}
+
 module "keyvault" {
-  source                          = "./modules/keyvault"
-  rg_name                         = azurerm_resource_group.main.name
-  location                        = var.location
-  suffix                          = local.suffix
-  tenant_id                       = data.azurerm_client_config.current.tenant_id
-  deployer_object_id              = data.azurerm_client_config.current.object_id
-  secret_reader_principal_ids     = [module.vm.backend_principal_id, module.vm.ops_principal_id]
-  sql_admin_password              = var.sql_admin_password
-  sonar_db_password               = var.sonar_db_password
-  app_insights_connection_string  = module.monitoring.app_insights_connection_string
+  source                            = "./modules/keyvault"
+  rg_name                           = azurerm_resource_group.main.name
+  location                          = var.location
+  suffix                            = local.suffix
+  tenant_id                         = data.azurerm_client_config.current.tenant_id
+  deployer_object_id                = data.azurerm_client_config.current.object_id
+  secret_reader_principal_ids       = [module.vm.backend_principal_id, module.vm.ops_principal_id, azurerm_user_assigned_identity.appgateway.principal_id]
+  certificate_manager_principal_ids = [module.vm.ops_principal_id]
+  sql_admin_password                = var.sql_admin_password
+  sonar_db_password                 = var.sonar_db_password
+  app_insights_connection_string    = module.monitoring.app_insights_connection_string
 }
 
 resource "azurerm_container_registry" "main" {
@@ -87,11 +94,16 @@ resource "azurerm_role_assignment" "ops_acr_push" {
 }
 
 module "appgateway" {
-  source              = "./modules/appgateway"
-  rg_name             = azurerm_resource_group.main.name
-  location            = var.location
-  suffix              = local.suffix
-  gateway_subnet_id   = module.networking.gateway_subnet_id
-  frontend_private_ip = module.vm.frontend_private_ip
-  backend_private_ip  = module.vm.backend_private_ip
+  source                          = "./modules/appgateway"
+  rg_name                         = azurerm_resource_group.main.name
+  location                        = var.location
+  suffix                          = local.suffix
+  gateway_subnet_id               = module.networking.gateway_subnet_id
+  frontend_private_ip             = module.vm.frontend_private_ip
+  backend_private_ip              = module.vm.backend_private_ip
+  ops_private_ip                  = module.vm.ops_private_ip
+  user_assigned_identity_id       = azurerm_user_assigned_identity.appgateway.id
+  enable_https                    = var.appgw_enable_https
+  ssl_certificate_secret_id       = trimspace(var.appgw_ssl_certificate_secret_id) != "" ? trimspace(var.appgw_ssl_certificate_secret_id) : "${module.keyvault.key_vault_uri}secrets/${var.appgw_ssl_certificate_name}/"
+  frontend_hostname               = var.appgw_hostname
 }

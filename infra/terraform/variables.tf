@@ -27,3 +27,20 @@ variable "sql_admin_password" {
 variable "sonar_db_password" {
   sensitive = true
 }
+
+variable "appgw_hostname" {
+  default = ""
+}
+
+variable "appgw_enable_https" {
+  default = false
+}
+
+variable "appgw_ssl_certificate_name" {
+  default = "appgw-ssl-cert"
+}
+
+variable "appgw_ssl_certificate_secret_id" {
+  default   = ""
+  sensitive = true
+}

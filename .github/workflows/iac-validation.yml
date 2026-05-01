@@ -11,6 +11,7 @@ name: IaC Validation
   push:
     branches:
       - main
+      - feat-ci-cd
     paths:
       - ".github/workflows/iac-validation.yml"
       - ".pre-commit-config.yaml"

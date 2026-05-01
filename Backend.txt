@@ -109,11 +109,12 @@ Add `.github/workflows/backend.yml`.
 
 Requirements:
 
-- Build, test, and scan on the self-hosted ops runner
+- Run build and test on `ubuntu-latest` for both pushes and pull requests
+- Run image push, SonarQube scan, and deployment on the self-hosted ops runner only for pushes to `main`
 - Log in to Azure with the runner managed identity
 - Read ACR details from Terraform outputs instead of hardcoding them
 - Build and push `backend:${GITHUB_SHA}` and `backend:latest`
-- Deploy with `ansible-playbook config/ansible/site.yml --limit backend_vms`
+- Deploy with `ansible-playbook config/ansible/site.yml --limit "localhost,backend_vms"`
 - Do not use static Ansible inventory files
 - Let Ansible build inventory from `terraform output -json`
 
@@ -121,7 +122,8 @@ Deployment notes:
 
 - The backend deploy reads non-secret topology values from Terraform outputs
 - Sensitive values remain in Key Vault
-- `BACKEND_CORS_ALLOWED_ORIGINS` may be supplied as a GitHub Actions variable for custom domains; otherwise deployment defaults to the App Gateway public IP origin
+- Set `ANSIBLE_USE_BASTION=false` when the deploy command runs on the ops runner inside the VNet
+- `BACKEND_CORS_ALLOWED_ORIGINS` may be supplied as a GitHub Actions variable for custom domains; otherwise deployment defaults to the App Gateway frontend origin from Terraform outputs
 - The ops VM managed identity needs `AcrPush` on ACR
 
 References:
