@@ -48,3 +48,15 @@ module "appgateway" {
   frontend_private_ip = module.vm.frontend_private_ip
   backend_private_ip  = module.vm.backend_private_ip
 }
+
+module "keyvault" {
+  source                  = "./modules/keyvault"
+  name                    = "kv-${local.suffix}"
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
+  suffix                  = local.suffix
+  tenant_id               = data.azurerm_client_config.current.tenant_id
+  virtual_network_id      = module.network.vnet_id
+  ops_subnet_id           = module.network.ops_subnet_id
+  ops_runner_principal_id = module.compute.ops_vm_principal_id
+}
