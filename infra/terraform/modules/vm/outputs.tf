@@ -23,5 +23,9 @@ output "ops_private_ip" {
 }
 
 output "ops_public_ip" {
-  value = azurerm_public_ip.ops.ip_address
+  value = data.azurerm_public_ip.ops.ip_address
+}
+
+output "ops_vm_identity" {
+  value = azurerm_linux_virtual_machine.ops.identity[0].principal_id
 }

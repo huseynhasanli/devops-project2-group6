@@ -1,3 +1,20 @@
-ansible_user: azureuser
-ansible_ssh_private_key_file: ~/.ssh/project2-g6
-bastion_host: 20.203.5.89
+project: "project2"
+group: "g6"
+suffix: "{{ project }}-{{ group }}"
+compact_suffix: "{{ project }}{{ group }}"
+acr_login_server: "acr{{ compact_suffix }}.azurecr.io"
+acr_username: "acrproject2g6"
+acr_password: "your-acr-password"
+frontend_image: "{{ acr_login_server }}/frontend:{{ image_tag | default('latest') }}"
+backend_image: "{{ acr_login_server }}/backend:{{ image_tag | default('latest') }}"
+backend_port: "8080"
+frontend_port: "80"
+
+sql_host: "sql-{{ suffix }}.database.windows.net"
+sql_database: "sqldb-{{ suffix }}"
+sql_username: "sqladmin"
+sql_password: "your-sql-password"
+
+sonar_db_password: "sonarpass123!"
+
+ai_connection_string: ""

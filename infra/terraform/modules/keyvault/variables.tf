@@ -45,7 +45,7 @@ variable "purge_protection_enabled" {
 
 variable "soft_delete_retention_days" {
   type    = number
-  default = 7
+  default = 90
 }
 
 variable "tags" {

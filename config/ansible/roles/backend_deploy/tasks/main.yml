@@ -1,0 +1,29 @@
+- name: Pull backend image from ACR
+  community.docker.docker_image:
+    name: "{{ backend_image }}"
+    source: pull
+    force_source: yes
+
+- name: Stop old backend container
+  community.docker.docker_container:
+    name: backend
+    state: stopped
+  ignore_errors: yes
+
+- name: Run backend container
+  community.docker.docker_container:
+    name: backend
+    image: "{{ backend_image }}"
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "8080:8080"
+    env:
+      SPRING_PROFILES_ACTIVE: "azure"
+      DB_HOST: "{{ sql_host }}"
+      DB_PORT: "1433"
+      DB_NAME: "{{ sql_database }}"
+      DB_USERNAME: "{{ sql_username }}"
+      DB_PASSWORD: "{{ sql_password }}"
+      DB_DRIVER: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+      APPLICATIONINSIGHTS_CONNECTION_STRING: "{{ ai_connection_string }}"

@@ -28,3 +28,4 @@ yarn-error.log*
 **/**/target/
 *.tfvars
 __azurite_db_blob*
+config/ansible/group_vars/all.yml

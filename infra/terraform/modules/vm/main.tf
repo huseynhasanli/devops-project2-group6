@@ -1,10 +1,8 @@
-resource "azurerm_public_ip" "ops" {
+data "azurerm_public_ip" "ops" {
   name                = "pip-ops-${var.suffix}"
   resource_group_name = var.rg_name
-  location            = var.location
-  allocation_method   = "Static"
-  sku                 = "Standard"
 }
+
 resource "azurerm_network_interface" "frontend" {
   name                = "nic-frontend-${var.suffix}"
   resource_group_name = var.rg_name
@@ -38,7 +36,7 @@ resource "azurerm_network_interface" "ops" {
     name                          = "internal"
     subnet_id                     = var.ops_subnet_id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.ops.id
+    public_ip_address_id          = data.azurerm_public_ip.ops.id
   }
 }
 
@@ -103,6 +101,10 @@ resource "azurerm_linux_virtual_machine" "ops" {
   size                = var.vm_size
   admin_username      = var.admin_username
 
+  identity {
+  type = "SystemAssigned"
+  }
+  
   network_interface_ids = [azurerm_network_interface.ops.id]
 
   admin_ssh_key {

@@ -1,0 +1,20 @@
+- name: Pull frontend image from ACR
+  community.docker.docker_image:
+    name: "{{ frontend_image }}"
+    source: pull
+    force_source: yes
+
+- name: Stop old frontend container
+  community.docker.docker_container:
+    name: frontend
+    state: stopped
+  ignore_errors: yes
+
+- name: Run frontend container
+  community.docker.docker_container:
+    name: frontend
+    image: "{{ frontend_image }}"
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "{{ frontend_port }}:80"
